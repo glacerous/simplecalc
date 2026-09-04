@@ -19,6 +19,21 @@ class DataKelompokScreen extends StatelessWidget {
                 _InfoRow(label: 'NIM', value: '124240056'),
                 _InfoRow(label: 'Prodi', value: 'Sistem Informasi'),
                 _InfoRow(label: 'Kampus', value: 'UPN Veteran Yogyakarta'),
+                SizedBox(height: 5),
+                _InfoRow(label: 'Nama', value: 'Pindo'),
+                _InfoRow(label: 'NIM', value: '124240031'),
+                _InfoRow(label: 'Prodi', value: 'Sistem Informasi'),
+                _InfoRow(label: 'Kampus', value: 'UPN Veteran Yogyakarta'),
+                SizedBox(height: 5),
+                _InfoRow(label: 'Nama', value: 'Azzaky'),
+                _InfoRow(label: 'NIM', value: '124240018'),
+                _InfoRow(label: 'Prodi', value: 'Sistem Informasi'),
+                _InfoRow(label: 'Kampus', value: 'UPN Veteran Yogyakarta'),
+                SizedBox(height: 5),
+                _InfoRow(label: 'Nama', value: 'Lintang'),
+                _InfoRow(label: 'NIM', value: '124240009'),
+                _InfoRow(label: 'Prodi', value: 'Sistem Informasi'),
+                _InfoRow(label: 'Kampus', value: 'UPN Veteran Yogyakarta'),
                 // Tambahkan anggota kelompok lain di sini kalau perlu
               ],
             ),
@@ -43,7 +58,10 @@ class _InfoRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 90,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
           const Text(': '),
           Expanded(child: Text(value)),

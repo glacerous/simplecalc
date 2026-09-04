@@ -28,10 +28,23 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
     if (value == null || value.trim().isEmpty) {
       return 'Wajib diisi';
     }
-    if (double.tryParse(value.trim()) == null) {
+    if (_parseAngka(value) == null) {
       return 'Harus berupa angka';
     }
     return null;
+  }
+
+  // Dart cuma ngenalin titik (.) sebagai pemisah desimal, sedangkan di Indonesia
+  // orang sering pakai koma (,). Jadi sebelum di-parse, koma diganti dulu jadi titik.
+  double? _parseAngka(String value) {
+    return double.tryParse(value.trim().replaceAll(',', '.'));
+  }
+
+  // Kebalikan dari _parseAngka: dipakai saat MENAMPILKAN angka ke user,
+  // supaya hasil perhitungan juga muncul dengan format koma (gaya Indonesia),
+  // bukan format titik bawaan Dart.
+  String _formatAngka(double value) {
+    return value.toString().replaceAll('.', ',');
   }
 
   void _hitung() {
@@ -40,18 +53,18 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
       return;
     }
 
-    final a = double.parse(_aController.text.trim());
-    final b = double.parse(_bController.text.trim());
+    final a = _parseAngka(_aController.text)!;
+    final b = _parseAngka(_bController.text)!;
 
     final pembagian = b != 0
-        ? (a / b).toString()
+        ? _formatAngka(a / b)
         : 'tidak terdefinisi (pembagian dengan nol)';
 
     setState(() {
-      _hasil = '$a + $b = ${a + b}\n'
-          '$a - $b = ${a - b}\n'
-          '$a * $b = ${a * b}\n'
-          '$a / $b = $pembagian';
+      _hasil = '${_formatAngka(a)} + ${_formatAngka(b)} = ${_formatAngka(a + b)}\n'
+          '${_formatAngka(a)} - ${_formatAngka(b)} = ${_formatAngka(a - b)}\n'
+          '${_formatAngka(a)} * ${_formatAngka(b)} = ${_formatAngka(a * b)}\n'
+          '${_formatAngka(a)} / ${_formatAngka(b)} = $pembagian';
     });
   }
 
@@ -74,6 +87,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                 ),
                 decoration: const InputDecoration(
                   labelText: 'Angka pertama',
+                  helperText: 'Boleh pakai titik (.) atau koma (,)',
                   border: OutlineInputBorder(),
                 ),
                 validator: _validateAngka,
