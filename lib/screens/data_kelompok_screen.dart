@@ -3,6 +3,34 @@ import 'package:flutter/material.dart';
 class DataKelompokScreen extends StatelessWidget {
   const DataKelompokScreen({super.key});
 
+  Widget _row(String label, String value, Color ink) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.5),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 70,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2.0,
+                color: ink.withValues(alpha: 0.45),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 13, color: ink),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const ink = Color(0xFF141D2B);
@@ -16,9 +44,7 @@ class DataKelompokScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Data Kelompok'),
-      ),
+      appBar: AppBar(title: const Text('Data Kelompok')),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -41,24 +67,21 @@ class DataKelompokScreen extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'InstrumentSerif',
                     fontSize: 34,
-                    fontWeight: FontWeight.w400,
                     color: ink,
                     height: 1.1,
                   ),
                 ),
                 const SizedBox(height: 24),
+
                 ...members.asMap().entries.map((entry) {
                   final idx = entry.key + 1;
                   final m = entry.value;
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 14),
-                    padding: const EdgeInsets.all(18),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border.all(
-                        color: ink.withValues(alpha: 0.14),
-                        width: 0.9,
-                      ),
+                      border: Border.all(color: ink.withValues(alpha: 0.14), width: 0.9),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Column(
@@ -72,7 +95,6 @@ class DataKelompokScreen extends StatelessWidget {
                               style: const TextStyle(
                                 fontFamily: 'InstrumentSerif',
                                 fontSize: 24,
-                                fontWeight: FontWeight.w400,
                                 color: ink,
                               ),
                             ),
@@ -86,16 +108,12 @@ class DataKelompokScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-                        Divider(
-                          color: ink.withValues(alpha: 0.10),
-                          thickness: 0.8,
-                          height: 1,
-                        ),
-                        const SizedBox(height: 10),
-                        _DetailRow(label: 'NIM', value: m['nim']!),
-                        _DetailRow(label: 'PRODI', value: m['prodi']!),
-                        _DetailRow(label: 'KAMPUS', value: m['kampus']!),
+                        const SizedBox(height: 8),
+                        Divider(color: ink.withValues(alpha: 0.10), thickness: 0.8, height: 1),
+                        const SizedBox(height: 8),
+                        _row('NIM', m['nim']!, ink),
+                        _row('PRODI', m['prodi']!, ink),
+                        _row('KAMPUS', m['kampus']!, ink),
                       ],
                     ),
                   );
@@ -104,49 +122,6 @@ class DataKelompokScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _DetailRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    const ink = Color(0xFF141D2B);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 72,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 2.0,
-                color: ink.withValues(alpha: 0.45),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 13,
-                color: ink,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

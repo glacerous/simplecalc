@@ -11,7 +11,6 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
   final _formKey = GlobalKey<FormState>();
   final _aController = TextEditingController();
   final _bController = TextEditingController();
-
   String? _hasil;
 
   @override
@@ -21,23 +20,8 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
     super.dispose();
   }
 
-  String? _validateAngka(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Wajib diisi';
-    }
-    if (_parseAngka(value) == null) {
-      return 'Harus berupa angka';
-    }
-    return null;
-  }
-
-  double? _parseAngka(String value) {
-    return double.tryParse(value.trim().replaceAll(',', '.'));
-  }
-
-  String _formatAngka(double value) {
-    return value.toString().replaceAll('.', ',');
-  }
+  double? _parse(String s) => double.tryParse(s.trim().replaceAll(',', '.'));
+  String _fmt(double v) => v.toString().replaceAll('.', ',');
 
   void _hitung() {
     if (!_formKey.currentState!.validate()) {
@@ -45,18 +29,15 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
       return;
     }
 
-    final a = _parseAngka(_aController.text)!;
-    final b = _parseAngka(_bController.text)!;
-
-    final pembagian = b != 0
-        ? _formatAngka(a / b)
-        : 'tidak terdefinisi (pembagian dengan nol)';
+    final a = _parse(_aController.text)!;
+    final b = _parse(_bController.text)!;
+    final bagi = b != 0 ? _fmt(a / b) : 'tidak terdefinisi (pembagian dengan nol)';
 
     setState(() {
-      _hasil = '${_formatAngka(a)} + ${_formatAngka(b)} = ${_formatAngka(a + b)}\n'
-          '${_formatAngka(a)} - ${_formatAngka(b)} = ${_formatAngka(a - b)}\n'
-          '${_formatAngka(a)} * ${_formatAngka(b)} = ${_formatAngka(a * b)}\n'
-          '${_formatAngka(a)} / ${_formatAngka(b)} = $pembagian';
+      _hasil = '${_fmt(a)} + ${_fmt(b)} = ${_fmt(a + b)}\n'
+          '${_fmt(a)} - ${_fmt(b)} = ${_fmt(a - b)}\n'
+          '${_fmt(a)} * ${_fmt(b)} = ${_fmt(a * b)}\n'
+          '${_fmt(a)} / ${_fmt(b)} = $bagi';
     });
   }
 
@@ -66,9 +47,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Aritmatika'),
-      ),
+      appBar: AppBar(title: const Text('Aritmatika')),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -95,7 +74,6 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                       style: TextStyle(
                         fontFamily: 'InstrumentSerif',
                         fontSize: 34,
-                        fontWeight: FontWeight.w400,
                         color: ink,
                         height: 1.1,
                       ),
@@ -104,54 +82,25 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
 
                     TextFormField(
                       controller: _aController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                        signed: true,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: ink,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      decoration: InputDecoration(
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                      decoration: const InputDecoration(
                         labelText: 'Angka pertama',
-                        hintText: 'Masukkan angka (mis. 10 atau 2,5)',
-                        helperText: 'Boleh menggunakan titik (.) atau koma (,)',
-                        helperStyle: TextStyle(
-                          fontSize: 11,
-                          color: ink.withValues(alpha: 0.45),
-                        ),
-                        prefixIcon: Icon(
-                          Icons.tag_rounded,
-                          size: 19,
-                          color: ink.withValues(alpha: 0.70),
-                        ),
+                        hintText: 'Misal: 10 atau 2,5',
+                        prefixIcon: Icon(Icons.tag_rounded, size: 19),
                       ),
-                      validator: _validateAngka,
+                      validator: (v) => _parse(v ?? '') == null ? 'Harus berupa angka' : null,
                     ),
                     const SizedBox(height: 20),
 
                     TextFormField(
                       controller: _bController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                        signed: true,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: ink,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      decoration: InputDecoration(
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                      decoration: const InputDecoration(
                         labelText: 'Angka kedua',
-                        hintText: 'Masukkan angka',
-                        prefixIcon: Icon(
-                          Icons.tag_rounded,
-                          size: 19,
-                          color: ink.withValues(alpha: 0.70),
-                        ),
+                        hintText: 'Misal: 5 atau 1,2',
+                        prefixIcon: Icon(Icons.tag_rounded, size: 19),
                       ),
-                      validator: _validateAngka,
+                      validator: (v) => _parse(v ?? '') == null ? 'Harus berupa angka' : null,
                     ),
                     const SizedBox(height: 36),
 
@@ -169,10 +118,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(
-                            color: ink.withValues(alpha: 0.16),
-                            width: 1.0,
-                          ),
+                          border: Border.all(color: ink.withValues(alpha: 0.16), width: 1.0),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Column(
@@ -188,11 +134,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Divider(
-                              color: ink.withValues(alpha: 0.10),
-                              thickness: 0.8,
-                              height: 1,
-                            ),
+                            Divider(color: ink.withValues(alpha: 0.10), thickness: 0.8, height: 1),
                             const SizedBox(height: 14),
                             Text(
                               _hasil!,
@@ -200,7 +142,6 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                                 fontSize: 16,
                                 height: 1.8,
                                 color: ink,
-                                fontWeight: FontWeight.w400,
                                 letterSpacing: 0.4,
                               ),
                             ),

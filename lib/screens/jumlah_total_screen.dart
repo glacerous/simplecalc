@@ -12,7 +12,7 @@ class _JumlahTotalScreenState extends State<JumlahTotalScreen> {
   final _controller = TextEditingController();
 
   int? _banyakDigit;
-  int? _totalPenjumlahan;
+  int? _total;
   String? _rincian;
 
   @override
@@ -25,20 +25,17 @@ class _JumlahTotalScreenState extends State<JumlahTotalScreen> {
     if (!_formKey.currentState!.validate()) {
       setState(() {
         _banyakDigit = null;
-        _totalPenjumlahan = null;
+        _total = null;
         _rincian = null;
       });
       return;
     }
 
-    final teks = _controller.text.trim();
-    // Pecah setiap karakter digit menjadi list integer
-    final digitList = teks.split('').map(int.parse).toList();
-
+    final digits = _controller.text.trim().split('').map(int.parse).toList();
     setState(() {
-      _banyakDigit = digitList.length;
-      _totalPenjumlahan = digitList.reduce((a, b) => a + b);
-      _rincian = digitList.join(' + ');
+      _banyakDigit = digits.length;
+      _total = digits.reduce((a, b) => a + b);
+      _rincian = digits.join(' + ');
     });
   }
 
@@ -48,9 +45,7 @@ class _JumlahTotalScreenState extends State<JumlahTotalScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Jumlah Total Angka'),
-      ),
+      appBar: AppBar(title: const Text('Jumlah Total Angka')),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -77,7 +72,6 @@ class _JumlahTotalScreenState extends State<JumlahTotalScreen> {
                       style: TextStyle(
                         fontFamily: 'InstrumentSerif',
                         fontSize: 34,
-                        fontWeight: FontWeight.w400,
                         color: ink,
                         height: 1.1,
                       ),
@@ -87,30 +81,14 @@ class _JumlahTotalScreenState extends State<JumlahTotalScreen> {
                     TextFormField(
                       controller: _controller,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: ink,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Masukkan deretan angka',
                         hintText: 'Contoh: 12345',
-                        helperText: 'Masukkan angka tanpa spasi atau simbol',
-                        helperStyle: TextStyle(
-                          fontSize: 11,
-                          color: ink.withValues(alpha: 0.45),
-                        ),
-                        prefixIcon: Icon(
-                          Icons.pin_rounded,
-                          size: 19,
-                          color: ink.withValues(alpha: 0.70),
-                        ),
+                        prefixIcon: Icon(Icons.pin_rounded, size: 19),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Wajib diisi';
-                        }
-                        if (!RegExp(r'^[0-9]+$').hasMatch(value.trim())) {
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Wajib diisi';
+                        if (!RegExp(r'^[0-9]+$').hasMatch(v.trim())) {
                           return 'Hanya boleh berisi angka (0-9)';
                         }
                         return null;
@@ -127,15 +105,12 @@ class _JumlahTotalScreenState extends State<JumlahTotalScreen> {
                     ),
                     const SizedBox(height: 28),
 
-                    if (_totalPenjumlahan != null)
+                    if (_total != null)
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(
-                            color: ink.withValues(alpha: 0.16),
-                            width: 1.0,
-                          ),
+                          border: Border.all(color: ink.withValues(alpha: 0.16), width: 1.0),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Column(
@@ -151,28 +126,19 @@ class _JumlahTotalScreenState extends State<JumlahTotalScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Divider(
-                              color: ink.withValues(alpha: 0.10),
-                              thickness: 0.8,
-                              height: 1,
-                            ),
+                            Divider(color: ink.withValues(alpha: 0.10), thickness: 0.8, height: 1),
                             const SizedBox(height: 14),
                             Text(
                               'Banyaknya angka: $_banyakDigit digit',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: ink,
-                                fontWeight: FontWeight.w400,
-                              ),
+                              style: const TextStyle(fontSize: 15, color: ink),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Penjumlahan: $_rincian = $_totalPenjumlahan',
+                              'Penjumlahan: $_rincian = $_total',
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: ink,
                                 fontWeight: FontWeight.w600,
-                                letterSpacing: 0.3,
                               ),
                             ),
                           ],

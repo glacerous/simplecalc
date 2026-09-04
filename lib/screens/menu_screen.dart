@@ -12,6 +12,37 @@ class MenuScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     const ink = Color(0xFF141D2B);
 
+    final menus = [
+      (
+        '01',
+        Icons.groups_outlined,
+        'Data Kelompok',
+        'Informasi anggota tim',
+        const DataKelompokScreen(),
+      ),
+      (
+        '02',
+        Icons.calculate_outlined,
+        'Aritmatika',
+        'Tambah, kurang, kali, bagi',
+        const AritmatikaScreen(),
+      ),
+      (
+        '03',
+        Icons.filter_2_outlined,
+        'Ganjil / Genap',
+        'Pengecekan paritas bilangan',
+        const GanjilGenapScreen(),
+      ),
+      (
+        '04',
+        Icons.summarize_outlined,
+        'Jumlah Total Angka',
+        'Penjumlahan deret data',
+        const JumlahTotalScreen(),
+      ),
+    ];
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -21,7 +52,8 @@ class MenuScreen extends StatelessWidget {
             icon: const Icon(Icons.logout_rounded, size: 20),
             tooltip: 'Logout',
             onPressed: () {
-              Navigator.of(context).pushAndRemoveUntil(
+              Navigator.pushAndRemoveUntil(
+                context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
                 (route) => false,
               );
@@ -36,7 +68,6 @@ class MenuScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               children: [
-                // Header section
                 Text(
                   'MENU UTAMA',
                   style: TextStyle(
@@ -52,138 +83,56 @@ class MenuScreen extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'InstrumentSerif',
                     fontSize: 34,
-                    fontWeight: FontWeight.w400,
                     color: ink,
                     height: 1.1,
                   ),
                 ),
                 const SizedBox(height: 28),
 
-                // Menu items
-                _MenuCard(
-                  number: '01',
-                  icon: Icons.groups_outlined,
-                  title: 'Data Kelompok',
-                  subtitle: 'Informasi anggota tim',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const DataKelompokScreen()),
-                  ),
-                ),
-                _MenuCard(
-                  number: '02',
-                  icon: Icons.calculate_outlined,
-                  title: 'Aritmatika',
-                  subtitle: 'Tambah, kurang, kali, bagi',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AritmatikaScreen()),
-                  ),
-                ),
-                _MenuCard(
-                  number: '03',
-                  icon: Icons.filter_2_outlined,
-                  title: 'Ganjil / Genap',
-                  subtitle: 'Pengecekan paritas bilangan',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const GanjilGenapScreen()),
-                  ),
-                ),
-                _MenuCard(
-                  number: '04',
-                  icon: Icons.summarize_outlined,
-                  title: 'Jumlah Total Angka',
-                  subtitle: 'Penjumlahan deret data',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const JumlahTotalScreen()),
-                  ),
-                ),
+                ...menus.map((item) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: ink.withValues(alpha: 0.14), width: 0.9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      leading: Text(
+                        item.$1,
+                        style: TextStyle(
+                          fontFamily: 'InstrumentSerif',
+                          fontSize: 20,
+                          color: ink.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      title: Text(
+                        item.$3,
+                        style: const TextStyle(
+                          fontFamily: 'InstrumentSerif',
+                          fontSize: 22,
+                          color: ink,
+                        ),
+                      ),
+                      subtitle: Text(
+                        item.$4,
+                        style: TextStyle(fontSize: 12, color: ink.withValues(alpha: 0.50)),
+                      ),
+                      trailing: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: ink.withValues(alpha: 0.35),
+                      ),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => item.$5),
+                      ),
+                    ),
+                  );
+                }),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuCard extends StatelessWidget {
-  final String number;
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _MenuCard({
-    required this.number,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const ink = Color(0xFF141D2B);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(
-          color: ink.withValues(alpha: 0.14),
-          width: 0.9,
-        ),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
-            children: [
-              Text(
-                number,
-                style: TextStyle(
-                  fontFamily: 'InstrumentSerif',
-                  fontSize: 20,
-                  color: ink.withValues(alpha: 0.35),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Icon(icon, color: ink, size: 22),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontFamily: 'InstrumentSerif',
-                        fontSize: 22,
-                        fontWeight: FontWeight.w400,
-                        color: ink,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ink.withValues(alpha: 0.50),
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: ink.withValues(alpha: 0.35),
-              ),
-            ],
           ),
         ),
       ),

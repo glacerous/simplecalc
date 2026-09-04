@@ -9,13 +9,12 @@ class GanjilGenapScreen extends StatefulWidget {
 
 class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nController = TextEditingController();
-
+  final _controller = TextEditingController();
   String? _hasil;
 
   @override
   void dispose() {
-    _nController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -25,11 +24,9 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
       return;
     }
 
-    final n = int.parse(_nController.text.trim());
-    final genap = n % 2 == 0;
-
+    final n = int.parse(_controller.text.trim());
     setState(() {
-      _hasil = '$n adalah bilangan ${genap ? 'GENAP' : 'GANJIL'}';
+      _hasil = '$n adalah bilangan ${n % 2 == 0 ? 'GENAP' : 'GANJIL'}';
     });
   }
 
@@ -39,9 +36,7 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Ganjil / Genap'),
-      ),
+      appBar: AppBar(title: const Text('Ganjil / Genap')),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -68,7 +63,6 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
                       style: TextStyle(
                         fontFamily: 'InstrumentSerif',
                         fontSize: 34,
-                        fontWeight: FontWeight.w400,
                         color: ink,
                         height: 1.1,
                       ),
@@ -76,36 +70,16 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
                     const SizedBox(height: 28),
 
                     TextFormField(
-                      controller: _nController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        signed: true,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: ink,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      decoration: InputDecoration(
+                      controller: _controller,
+                      keyboardType: const TextInputType.numberWithOptions(signed: true),
+                      decoration: const InputDecoration(
                         labelText: 'Masukkan bilangan bulat',
                         hintText: 'Contoh: 7, 12, atau -4',
-                        helperText: 'Harus bilangan bulat tanpa koma atau desimal',
-                        helperStyle: TextStyle(
-                          fontSize: 11,
-                          color: ink.withValues(alpha: 0.45),
-                        ),
-                        prefixIcon: Icon(
-                          Icons.tag_rounded,
-                          size: 19,
-                          color: ink.withValues(alpha: 0.70),
-                        ),
+                        prefixIcon: Icon(Icons.tag_rounded, size: 19),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Wajib diisi';
-                        }
-                        if (int.tryParse(value.trim()) == null) {
-                          return 'Harus berupa bilangan bulat (tanpa koma/desimal)';
-                        }
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'Wajib diisi';
+                        if (int.tryParse(v.trim()) == null) return 'Harus bilangan bulat';
                         return null;
                       },
                     ),
@@ -125,10 +99,7 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(
-                            color: ink.withValues(alpha: 0.16),
-                            width: 1.0,
-                          ),
+                          border: Border.all(color: ink.withValues(alpha: 0.16), width: 1.0),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Column(
@@ -143,11 +114,7 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Divider(
-                              color: ink.withValues(alpha: 0.10),
-                              thickness: 0.8,
-                              height: 1,
-                            ),
+                            Divider(color: ink.withValues(alpha: 0.10), thickness: 0.8, height: 1),
                             const SizedBox(height: 14),
                             Text(
                               _hasil!,
@@ -156,7 +123,6 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
                                 fontFamily: 'InstrumentSerif',
                                 fontSize: 26,
                                 color: ink,
-                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
