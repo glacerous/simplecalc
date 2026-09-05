@@ -306,7 +306,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                               Divider(color: ink.withValues(alpha: 0.08), thickness: 0.8, height: 1),
                               const SizedBox(height: 10),
                               Text(
-                                '* Catatan: Angka melebihi 15 digit. Pembagian desimal dapat mengalami pembulatan presisi sistem.',
+                                '* Catatan: Angka melebihi 15 digit. Hasil perhitungan dapat mengalami pembulatan presisi sistem.',
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontStyle: FontStyle.italic,
