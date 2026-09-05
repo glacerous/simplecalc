@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Model kecil untuk satu baris input angka.
 /// Diberi `id` unik (bukan sekadar index) supaya saat sebuah field
@@ -8,6 +9,25 @@ class _NumberField {
   _NumberField(this.id) : controller = TextEditingController();
   final int id;
   final TextEditingController controller;
+}
+
+/// Mencegah user mengetik lebih dari satu simbol desimal dalam satu field,
+/// baik koma maupun titik, atau campuran keduanya (mis. "1,2.3" atau "1..2"
+/// atau "1,,2" semua ditolak). Begitu sudah ada satu simbol (apapun jenisnya),
+/// percobaan menambah simbol kedua ditolak, balik ke nilai sebelumnya.
+class _SingleDecimalSeparatorInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final jumlahSeparator =
+        RegExp(r'[.,]').allMatches(newValue.text).length;
+    if (jumlahSeparator > 1) {
+      return oldValue;
+    }
+    return newValue;
+  }
 }
 
 class AritmatikaScreen extends StatefulWidget {
@@ -211,6 +231,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                                 decimal: true,
                                 signed: true,
                               ),
+                              inputFormatters: [_SingleDecimalSeparatorInputFormatter()],
                               decoration: InputDecoration(
                                 labelText: 'Angka ke-${i + 1}',
                                 hintText: 'Misal: 10 atau 2,5',
