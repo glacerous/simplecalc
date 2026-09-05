@@ -86,10 +86,27 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
   }
 
   String _fmt(double v) {
+    if (v.isNaN) return 'tidak terdefinisi';
+    if (v.isInfinite) return 'tak hingga';
+
+    String s = v.toString();
+    if (s.contains('e+')) {
+      final p = s.split('e+');
+      final exp = int.parse(p[1]);
+      final parts = p[0].split('.');
+      final dec = parts.length > 1 ? parts[1] : '';
+      if (exp >= dec.length) {
+        s = parts[0] + dec + ('0' * (exp - dec.length));
+      } else {
+        s = '${parts[0]}${dec.substring(0, exp)}.${dec.substring(exp)}';
+      }
+      return s.replaceAll('.', ',');
+    }
+
     if (v == v.truncateToDouble()) {
       return v.truncate().toString();
     }
-    String s = v.toStringAsFixed(4);
+    s = v.toStringAsFixed(4);
     s = s.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
     return s.replaceAll('.', ',');
   }
@@ -100,30 +117,46 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
       return;
     }
 
-    final nilai = _fields.map((f) => _parse(f.controller.text)!).toList();
+    final isAllInt = _fields.every((f) {
+      final t = f.controller.text.trim();
+      return !t.contains(',') && !t.contains('.');
+    });
 
-    final jumlah = nilai.reduce((a, b) => a + b);
-    final kali = nilai.reduce((a, b) => a * b);
-    final kurang = nilai.reduce((a, b) => a - b);
+    String strJumlah;
+    String strKurang;
+    String strKali;
 
+    if (isAllInt) {
+      final bValues = _fields.map((f) => BigInt.parse(f.controller.text.trim())).toList();
+      strJumlah = bValues.reduce((a, b) => a + b).toString();
+      strKurang = bValues.reduce((a, b) => a - b).toString();
+      strKali = bValues.reduce((a, b) => a * b).toString();
+    } else {
+      final dValues = _fields.map((f) => _parse(f.controller.text)!).toList();
+      strJumlah = _fmt(dValues.reduce((a, b) => a + b));
+      strKurang = _fmt(dValues.reduce((a, b) => a - b));
+      strKali = _fmt(dValues.reduce((a, b) => a * b));
+    }
+
+    final dValues = _fields.map((f) => _parse(f.controller.text)!).toList();
     String bagi;
-    double berjalan = nilai.first;
+    double berjalan = dValues.first;
     int? langkahNol;
-    for (var i = 1; i < nilai.length; i++) {
-      if (nilai[i] == 0) {
+    for (var i = 1; i < dValues.length; i++) {
+      if (dValues[i] == 0) {
         langkahNol = i + 1;
         break;
       }
-      berjalan = berjalan / nilai[i];
+      berjalan = berjalan / dValues[i];
     }
     bagi = langkahNol != null
         ? 'tidak terdefinisi (angka ke-$langkahNol adalah nol)'
         : _fmt(berjalan);
 
     setState(() {
-      _hasil = 'Total Penjumlahan = ${_fmt(jumlah)}\n'
-          'Total Pengurangan = ${_fmt(kurang)}\n'
-          'Total Perkalian   = ${_fmt(kali)}\n'
+      _hasil = 'Total Penjumlahan = $strJumlah\n'
+          'Total Pengurangan = $strKurang\n'
+          'Total Perkalian   = $strKali\n'
           'Total Pembagian   = $bagi';
     });
   }
