@@ -1,29 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Model kecil untuk satu baris input angka.
-/// Diberi `id` unik (bukan sekadar index) supaya saat sebuah field
-/// dihapus di tengah daftar, Flutter tidak salah mengenali widget mana
-/// yang mewakili controller yang mana.
 class _NumberField {
   _NumberField(this.id) : controller = TextEditingController();
   final int id;
   final TextEditingController controller;
 }
 
-/// Mencegah user mengetik lebih dari satu simbol desimal dalam satu field,
-/// baik koma maupun titik, atau campuran keduanya (mis. "1,2.3" atau "1..2"
-/// atau "1,,2" semua ditolak). Begitu sudah ada satu simbol (apapun jenisnya),
-/// percobaan menambah simbol kedua ditolak, balik ke nilai sebelumnya.
 class _SingleDecimalSeparatorInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    final jumlahSeparator =
-        RegExp(r'[.,]').allMatches(newValue.text).length;
-    if (jumlahSeparator > 1) {
+    if (RegExp(r'[.,]').allMatches(newValue.text).length > 1) {
       return oldValue;
     }
     return newValue;
@@ -122,6 +112,8 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
       return !t.contains(',') && !t.contains('.');
     });
 
+    final dValues = _fields.map((f) => _parse(f.controller.text)!).toList();
+
     String strJumlah;
     String strKurang;
     String strKali;
@@ -132,13 +124,11 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
       strKurang = bValues.reduce((a, b) => a - b).toString();
       strKali = bValues.reduce((a, b) => a * b).toString();
     } else {
-      final dValues = _fields.map((f) => _parse(f.controller.text)!).toList();
       strJumlah = _fmt(dValues.reduce((a, b) => a + b));
       strKurang = _fmt(dValues.reduce((a, b) => a - b));
       strKali = _fmt(dValues.reduce((a, b) => a * b));
     }
 
-    final dValues = _fields.map((f) => _parse(f.controller.text)!).toList();
     String bagi;
     double berjalan = dValues.first;
     int? langkahNol;
