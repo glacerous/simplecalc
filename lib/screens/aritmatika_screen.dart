@@ -37,6 +37,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
   static const int _maxFields = 10;
 
   String? _hasil;
+  bool _peringatanPresisi = false;
 
   @override
   void initState() {
@@ -58,6 +59,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
     setState(() {
       _fields.add(_NumberField(_nextId++));
       _hasil = null;
+      _peringatanPresisi = false;
     });
   }
 
@@ -66,6 +68,7 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
     setState(() {
       _fields.removeWhere((f) => f.id == id);
       _hasil = null;
+      _peringatanPresisi = false;
     });
   }
 
@@ -143,7 +146,12 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
         ? 'tidak terdefinisi (angka ke-$langkahNol adalah nol)'
         : _fmt(berjalan);
 
+    final adaLebih15 = _fields.any(
+      (f) => f.controller.text.trim().replaceAll(RegExp(r'[,.-]'), '').length > 15,
+    );
+
     setState(() {
+      _peringatanPresisi = adaLebih15;
       _hasil = 'Total Penjumlahan = $strJumlah\n'
           'Total Pengurangan = $strKurang\n'
           'Total Perkalian   = $strKali\n'
@@ -215,18 +223,13 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                                 labelText: 'Angka ke-${i + 1}',
                                 hintText: 'Misal: 10 atau 2,5',
                                 prefixIcon: const Icon(Icons.tag_rounded, size: 19),
-                                counterText: '',
                               ),
-                              maxLength: 18,
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
                                   return 'Wajib diisi';
                                 }
                                 if (_parse(v) == null) {
                                   return 'Harus berupa angka valid';
-                                }
-                                if (v.trim().replaceAll(RegExp(r'[,.-]'), '').length > 15) {
-                                  return 'Maksimal 15 digit angka';
                                 }
                                 return null;
                               },
@@ -298,6 +301,19 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                                 letterSpacing: 0.3,
                               ),
                             ),
+                            if (_peringatanPresisi) ...[
+                              const SizedBox(height: 12),
+                              Divider(color: ink.withValues(alpha: 0.08), thickness: 0.8, height: 1),
+                              const SizedBox(height: 10),
+                              Text(
+                                '* Catatan: Angka melebihi 15 digit. Pembagian desimal dapat mengalami pembulatan presisi sistem.',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontStyle: FontStyle.italic,
+                                  color: ink.withValues(alpha: 0.55),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
