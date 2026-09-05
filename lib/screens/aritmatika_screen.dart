@@ -192,13 +192,18 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                                 labelText: 'Angka ke-${i + 1}',
                                 hintText: 'Misal: 10 atau 2,5',
                                 prefixIcon: const Icon(Icons.tag_rounded, size: 19),
+                                counterText: '',
                               ),
+                              maxLength: 18,
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
                                   return 'Wajib diisi';
                                 }
                                 if (_parse(v) == null) {
                                   return 'Harus berupa angka valid';
+                                }
+                                if (v.trim().replaceAll(RegExp(r'[,.-]'), '').length > 15) {
+                                  return 'Maksimal 15 digit angka';
                                 }
                                 return null;
                               },
