@@ -24,9 +24,9 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
       return;
     }
 
-    final n = int.parse(_controller.text.trim());
+    final n = BigInt.parse(_controller.text.trim());
     setState(() {
-      _hasil = '$n adalah bilangan ${n % 2 == 0 ? 'GENAP' : 'GANJIL'}';
+      _hasil = '$n adalah bilangan ${n.isEven ? 'GENAP' : 'GANJIL'}';
     });
   }
 
@@ -79,7 +79,7 @@ class _GanjilGenapScreenState extends State<GanjilGenapScreen> {
                       ),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                        if (int.tryParse(v.trim()) == null) return 'Harus bilangan bulat';
+                        if (BigInt.tryParse(v.trim()) == null) return 'Harus bilangan bulat';
                         return null;
                       },
                     ),

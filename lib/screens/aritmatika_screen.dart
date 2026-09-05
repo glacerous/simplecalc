@@ -40,19 +40,17 @@ class AritmatikaScreen extends StatefulWidget {
 class _AritmatikaScreenState extends State<AritmatikaScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Sekarang input angka berupa daftar dinamis, bukan cuma 2 controller tetap.
   final List<_NumberField> _fields = [];
   int _nextId = 0;
 
-  static const int _minFields = 2; // minimal 2 angka biar operasi tetap bermakna
-  static const int _maxFields = 10; // batas atas supaya UI tidak kepanjangan
+  static const int _minFields = 2;
+  static const int _maxFields = 10;
 
   String? _hasil;
 
   @override
   void initState() {
     super.initState();
-    // Diisi langsung (tanpa setState) karena ini terjadi sebelum build pertama.
     _fields.add(_NumberField(_nextId++));
     _fields.add(_NumberField(_nextId++));
   }
@@ -81,53 +79,19 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
     });
   }
 
-  double? _parse(String s) => double.tryParse(s.trim().replaceAll(',', '.'));
-
-  /// Mengubah double jadi string angka PENUH (tidak pernah dalam bentuk
-  /// notasi ilmiah seperti "1e+21"), lalu titik desimalnya diganti koma
-  /// supaya sesuai format Indonesia.
-  String _fmt(double v) {
-    if (v.isNaN) return 'tidak terdefinisi (NaN)';
-    if (v.isInfinite) return v.isNegative ? '-tak hingga' : 'tak hingga';
-
-    // Dart's toStringAsFixed() sendiri baru "lari" ke notasi ilmiah
-    // begitu |v| >= 1e21. Jadi selama masih di bawah itu, aman dipakai
-    // langsung untuk memastikan hasilnya selalu angka penuh.
-    if (v.abs() < 1e21) {
-      String s = v == v.truncateToDouble()
-          ? v.toStringAsFixed(0)
-          : v.toStringAsFixed(15);
-      if (s.contains('.')) {
-        s = s.replaceFirst(RegExp(r'0+$'), '');
-        s = s.replaceFirst(RegExp(r'\.$'), '');
-      }
-      return s.replaceAll('.', ',');
-    }
-
-    // Untuk angka yang sangat besar (>= 1e21), Dart pasti memberi bentuk
-    // eksponensial (mis. "1.23e+25"). Bentuk ini kita "bentangkan" sendiri
-    // jadi digit penuh, biar tidak pernah muncul huruf "e" ke pengguna.
-    return _bentangkanNotasiIlmiah(v).replaceAll('.', ',');
+  double? _parse(String s) {
+    final t = s.trim().replaceAll(',', '.');
+    if (!RegExp(r'^-?[0-9]+(\.[0-9]+)?$').hasMatch(t)) return null;
+    return double.tryParse(t);
   }
 
-  String _bentangkanNotasiIlmiah(double v) {
-    final eksponensial = v.toStringAsExponential(); // contoh: "1.23456e+21"
-    final match =
-        RegExp(r'^(-?)(\d)(?:\.(\d+))?e([+-]\d+)$').firstMatch(eksponensial);
-    if (match == null) return eksponensial; // fallback, seharusnya tak terjadi
-
-    final tanda = match.group(1) ?? '';
-    final digit = (match.group(2) ?? '') + (match.group(3) ?? '');
-    final pangkat = int.parse(match.group(4)!);
-
-    if (pangkat >= 0) {
-      if (pangkat + 1 >= digit.length) {
-        return '$tanda${digit.padRight(pangkat + 1, '0')}';
-      }
-      return '$tanda${digit.substring(0, pangkat + 1)}.${digit.substring(pangkat + 1)}';
-    } else {
-      return '${tanda}0.${'0' * (-pangkat - 1)}$digit';
+  String _fmt(double v) {
+    if (v == v.truncateToDouble()) {
+      return v.truncate().toString();
     }
+    String s = v.toStringAsFixed(4);
+    s = s.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+    return s.replaceAll('.', ',');
   }
 
   void _hitung() {
@@ -138,23 +102,16 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
 
     final nilai = _fields.map((f) => _parse(f.controller.text)!).toList();
 
-    // Penjumlahan & perkalian: urutan tidak masalah, tinggal digabung semua.
     final jumlah = nilai.reduce((a, b) => a + b);
     final kali = nilai.reduce((a, b) => a * b);
-
-    // Pengurangan berurutan dari kiri ke kanan:
-    // angka1 - angka2 - angka3 - ...
     final kurang = nilai.reduce((a, b) => a - b);
 
-    // Pembagian berurutan dari kiri ke kanan, sambil mengecek di setiap
-    // langkah apakah pembaginya nol (bisa terjadi di angka mana pun,
-    // bukan cuma yang terakhir).
     String bagi;
     double berjalan = nilai.first;
     int? langkahNol;
     for (var i = 1; i < nilai.length; i++) {
       if (nilai[i] == 0) {
-        langkahNol = i + 1; // posisi angka (1-based) yang bernilai nol
+        langkahNol = i + 1;
         break;
       }
       berjalan = berjalan / nilai[i];
@@ -218,7 +175,6 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Daftar field angka yang bisa bertambah/berkurang.
                     for (var i = 0; i < _fields.length; i++) ...[
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,8 +193,15 @@ class _AritmatikaScreenState extends State<AritmatikaScreen> {
                                 hintText: 'Misal: 10 atau 2,5',
                                 prefixIcon: const Icon(Icons.tag_rounded, size: 19),
                               ),
-                              validator: (v) =>
-                                  _parse(v ?? '') == null ? 'Harus berupa angka' : null,
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Wajib diisi';
+                                }
+                                if (_parse(v) == null) {
+                                  return 'Harus berupa angka valid';
+                                }
+                                return null;
+                              },
                             ),
                           ),
                           if (_fields.length > _minFields)
