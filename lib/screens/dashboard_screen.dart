@@ -89,7 +89,7 @@ class DashboardScreen extends StatelessWidget {
                 // 3. CRUD Tema
                 _menuButton(
                   context: context,
-                  text: '3. Kelola Sewa PC (CRUD)',
+                  text: '3. Kelola Sesi (CRUD)',
                   icon: Icons.table_chart,
                   targetScreen: const WarnetCrudScreen(),
                 ),

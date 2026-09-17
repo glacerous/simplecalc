@@ -36,7 +36,7 @@ class _WarnetCrudScreenState extends State<WarnetCrudScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isEdit ? 'Edit Sewa PC' : 'Tambah Sewa PC'),
+        title: Text(isEdit ? 'Edit Sesi' : 'Tambah Sesi'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -109,7 +109,7 @@ class _WarnetCrudScreenState extends State<WarnetCrudScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kelola Sewa PC (CRUD)'),
+        title: const Text('Kelola Sesi (CRUD)'),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showForm(),
@@ -118,7 +118,7 @@ class _WarnetCrudScreenState extends State<WarnetCrudScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _rentals.isEmpty
-              ? const Center(child: Text('Belum ada data rental.'))
+              ? const Center(child: Text('Belum ada data sesi.'))
               : ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: _rentals.length,
