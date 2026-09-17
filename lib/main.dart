@@ -1,100 +1,46 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'helpers/session_manager.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_shell_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+  } else if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
+  final bool isLogin = await SessionManager.isLogin();
+  runApp(WarnetApp(isLogin: isLogin));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class WarnetApp extends StatelessWidget {
+  final bool isLogin;
+  const WarnetApp({super.key, required this.isLogin});
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF141D2B);
-
     return MaterialApp(
-      title: 'simplecalc',
+      title: 'Warnet Pojok',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: const ColorScheme.light(
-          primary: ink,
-          surface: Colors.white,
-          onSurface: ink,
-        ),
-        fontFamily: 'InstrumentSerif',
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: ink,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          centerTitle: true,
-          titleTextStyle: TextStyle(
-            fontFamily: 'InstrumentSerif',
-            fontSize: 28,
-            fontWeight: FontWeight.w500,
-            color: ink,
-            letterSpacing: 0.5,
-          ),
-          iconTheme: IconThemeData(color: ink),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: ink,
-            foregroundColor: Colors.white,
-            elevation: 2,
-            shadowColor: ink.withValues(alpha: 0.25),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            textStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 3.0,
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: ink,
-            side: const BorderSide(color: ink, width: 1.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            textStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 3.0,
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          enabledBorder: UnderlineInputBorder(
-            borderSide: BorderSide(
-              color: ink.withValues(alpha: 0.40),
-              width: 1.0,
-            ),
-          ),
-          focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(
-              color: ink,
-              width: 1.6,
-            ),
-          ),
-          labelStyle: TextStyle(
-            color: ink.withValues(alpha: 0.65),
-            fontSize: 14,
-          ),
-          floatingLabelStyle: const TextStyle(
-            color: ink,
-            fontSize: 14,
-          ),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          centerTitle: true,
+        ),
       ),
-      home: const LoginScreen(),
+      home: isLogin ? const MainShellScreen() : const LoginScreen(),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../widgets/sky_video_bg.dart';
-import 'menu_screen.dart';
+import '../helpers/database_helper.dart';
+import '../helpers/session_manager.dart';
+import 'main_shell_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,15 +11,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  static const _validUser = 'admin';
-  static const _validPass = '12345';
-
-  final _formKey = GlobalKey<FormState>();
-  final _userController = TextEditingController();
-  final _passController = TextEditingController();
-
-  bool _obscure = true;
-  String? _error;
+  final _userController = TextEditingController(text: 'admin');
+  final _passController = TextEditingController(text: 'admin123');
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -27,134 +22,113 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _login() async {
+    final username = _userController.text.trim();
+    final password = _passController.text.trim();
 
-    if (_userController.text.trim() == _validUser &&
-        _passController.text.trim() == _validPass) {
-      setState(() => _error = null);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MenuScreen()),
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Username dan Password wajib diisi')),
       );
-    } else {
-      setState(() => _error = 'Username atau password salah');
+      return;
     }
-  }
 
-  InputDecoration _inputDeco(String hint, IconData icon, [Widget? suffix]) {
-    return InputDecoration(
-      hintText: hint,
-      prefixIcon: Icon(icon, size: 19, color: const Color(0xB3141D2B)),
-      prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      suffixIcon: suffix,
-      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-      enabledBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: Color(0x73141D2B)),
-      ),
-      focusedBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: Color(0xFF141D2B), width: 1.6),
-      ),
-    );
+    setState(() => _isLoading = true);
+
+    try {
+      final success = await DatabaseHelper.instance.login(username, password);
+
+      if (!mounted) return;
+
+      if (success) {
+        await SessionManager.saveLogin(username);
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainShellScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Username atau password salah!')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF141D2B);
-
     return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(child: SkyBackground()),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 360),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'TUGAS MOBILE TEORI',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 4.5,
-                            color: ink.withValues(alpha: 0.50),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'simplecalc',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'InstrumentSerif',
-                            fontSize: 84,
-                            color: ink,
-                            height: 0.95,
-                          ),
-                        ),
-                        const SizedBox(height: 52),
-
-                        TextFormField(
-                          controller: _userController,
-                          cursorColor: ink,
-                          style: const TextStyle(fontSize: 15, color: ink),
-                          decoration: _inputDeco('Username', Icons.mail_outline_rounded),
-                          validator: (v) => v == null || v.trim().isEmpty ? 'Username tidak boleh kosong' : null,
-                        ),
-                        const SizedBox(height: 24),
-
-                        TextFormField(
-                          controller: _passController,
-                          obscureText: _obscure,
-                          cursorColor: ink,
-                          style: const TextStyle(fontSize: 15, color: ink),
-                          decoration: _inputDeco(
-                            'Password',
-                            Icons.lock_outline_rounded,
-                            IconButton(
-                              icon: Icon(
-                                _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                size: 19,
-                                color: const Color(0x99141D2B),
-                              ),
-                              onPressed: () => setState(() => _obscure = !_obscure),
-                            ),
-                          ),
-                          validator: (v) => v == null || v.trim().isEmpty ? 'Password tidak boleh kosong' : null,
-                        ),
-
-                        if (_error != null) ...[
-                          const SizedBox(height: 16),
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 13, color: Colors.red.shade800, fontWeight: FontWeight.w600),
-                          ),
-                        ],
-
-                        const SizedBox(height: 44),
-                        SizedBox(
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _login,
-                            child: const Text('LOG IN'),
-                          ),
-                        ),
-                      ],
-                    ),
+      appBar: AppBar(
+        title: const Text('Login Warnet Pojok'),
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(Icons.computer, size: 80, color: Colors.blue),
+                const SizedBox(height: 16),
+                const Text(
+                  'WARNET POJOK',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: _userController,
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _passController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text('LOGIN', style: TextStyle(fontSize: 16)),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Default Login: admin / admin123',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
