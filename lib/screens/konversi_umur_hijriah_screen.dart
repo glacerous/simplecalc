@@ -27,8 +27,8 @@ class _KonversiUmurHijriahScreenState extends State<KonversiUmurHijriahScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _tanggalLahir,
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
+      firstDate: DateTime(1000),
+      lastDate: DateTime(2500),
     );
     if (picked != null) {
       setState(() {
@@ -42,8 +42,8 @@ class _KonversiUmurHijriahScreenState extends State<KonversiUmurHijriahScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _tanggalMasehi,
-      firstDate: DateTime(1950),
-      lastDate: DateTime(2050),
+      firstDate: DateTime(1000),
+      lastDate: DateTime(2500),
     );
     if (picked != null) {
       setState(() {

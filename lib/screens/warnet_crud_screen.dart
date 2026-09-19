@@ -324,7 +324,12 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
                   Expanded(
                     child: InkWell(
                       onTap: () async {
-                        final pick = await showDatePicker(context: context, initialDate: _tanggal, firstDate: DateTime(2020), lastDate: DateTime(2030));
+                        final pick = await showDatePicker(
+                          context: context,
+                          initialDate: _tanggal,
+                          firstDate: DateTime(1000),
+                          lastDate: DateTime(2500),
+                        );
                         if (pick != null) setState(() => _tanggal = pick);
                       },
                       child: InputDecorator(
