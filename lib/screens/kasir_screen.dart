@@ -1,29 +1,35 @@
 import 'package:flutter/material.dart';
 import '../helpers/tarif_warnet.dart';
 
-/// Satu baris belanja: nama barang (opsional) + harga satuan + qty.
-class _ItemBelanja {
-  _ItemBelanja(this.id)
-      : namaController = TextEditingController(),
-        hargaController = TextEditingController(),
-        qtyController = TextEditingController(text: '1');
-  final int id;
-  final TextEditingController namaController;
-  final TextEditingController hargaController;
-  final TextEditingController qtyController;
+class _MenuJajanan {
+  final String nama;
+  final int harga;
+  final IconData icon;
+  final String kategori;
 
-  void dispose() {
-    namaController.dispose();
-    hargaController.dispose();
-    qtyController.dispose();
-  }
+  const _MenuJajanan({
+    required this.nama,
+    required this.harga,
+    required this.icon,
+    required this.kategori,
+  });
 }
 
-/// Kasir Warnet Pojok — satu transaksi bisa berisi sewa PC (opsional) DAN
-/// jajanan/minuman (opsional, dinamis). Sebelumnya ini dua kalkulator
-/// terpisah (Biaya Sewa & Aritmatika/Kasir) yang masing-masing punya
-/// total+bayar+kembalian sendiri — digabung karena kasir beneran memang
-/// menjumlahkan semuanya jadi satu nota, bukan dua transaksi terpisah.
+const List<_MenuJajanan> _daftarMenu = [
+  _MenuJajanan(
+    nama: 'Indomie (Goreng/Kuah)',
+    harga: 6000,
+    icon: Icons.ramen_dining,
+    kategori: 'Makanan',
+  ),
+  _MenuJajanan(
+    nama: 'Es Teh Manis',
+    harga: 4000,
+    icon: Icons.local_drink,
+    kategori: 'Minuman',
+  ),
+];
+
 class KasirScreen extends StatefulWidget {
   const KasirScreen({super.key});
 
@@ -34,16 +40,16 @@ class KasirScreen extends StatefulWidget {
 class _KasirScreenState extends State<KasirScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // --- Bagian sewa PC (opsional) ---
-  bool _pakaiSewaPc = false;
+  // --- Bagian Billing PC (opsional) ---
+  bool _pakaiBillingPc = false;
   TipePc _tipePc = TipePc.reguler;
   final _durasiController = TextEditingController(text: '2');
-  bool _tambahEsTeh = false;
 
-  // --- Bagian jajanan/minuman (dinamis, opsional) ---
-  final List<_ItemBelanja> _items = [];
-  int _nextId = 0;
-  static const int _maxItems = 10;
+  // --- Bagian Menu Jajanan & Minuman ---
+  final Map<String, int> _qtyMenu = {
+    'Indomie (Goreng/Kuah)': 0,
+    'Es Teh Manis': 0,
+  };
 
   final _bayarController = TextEditingController();
   int _total = 0;
@@ -54,36 +60,31 @@ class _KasirScreenState extends State<KasirScreen> {
   void dispose() {
     _durasiController.dispose();
     _bayarController.dispose();
-    for (final item in _items) {
-      item.dispose();
-    }
     super.dispose();
   }
 
-  void _tambahItem() {
-    if (_items.length >= _maxItems) return;
-    setState(() => _items.add(_ItemBelanja(_nextId++)));
-  }
-
-  void _hapusItem(int id) {
+  void _increment(String nama) {
     setState(() {
-      _items.removeWhere((item) {
-        if (item.id == id) {
-          item.dispose();
-          return true;
-        }
-        return false;
-      });
+      _qtyMenu[nama] = (_qtyMenu[nama] ?? 0) + 1;
+      _hitungTotalOtomatis();
     });
   }
 
-  void _hitungTotal() {
-    if (!_formKey.currentState!.validate()) return;
+  void _decrement(String nama) {
+    final current = _qtyMenu[nama] ?? 0;
+    if (current > 0) {
+      setState(() {
+        _qtyMenu[nama] = current - 1;
+        _hitungTotalOtomatis();
+      });
+    }
+  }
 
+  void _hitungTotalOtomatis() {
     int total = 0;
     String? errDurasi;
 
-    if (_pakaiSewaPc) {
+    if (_pakaiBillingPc) {
       final jam = int.tryParse(_durasiController.text.trim());
       if (jam == null || jam <= 0) {
         errDurasi = 'Durasi harus angka bulat lebih dari 0';
@@ -91,74 +92,134 @@ class _KasirScreenState extends State<KasirScreen> {
         total += TipePc.hitungTotal(
           tipe: _tipePc,
           durasiJam: jam,
-          tambahEsTeh: _tambahEsTeh,
         );
       }
     }
 
-    for (final item in _items) {
-      final harga = int.tryParse(item.hargaController.text.trim()) ?? 0;
-      final qty = int.tryParse(item.qtyController.text.trim()) ?? 0;
-      total += harga * qty;
+    for (final menu in _daftarMenu) {
+      final qty = _qtyMenu[menu.nama] ?? 0;
+      total += menu.harga * qty;
     }
 
-    setState(() {
-      _errorDurasi = errDurasi;
-      _total = errDurasi == null ? total : 0;
-      _hitungKembalian();
-    });
+    _errorDurasi = errDurasi;
+    _total = errDurasi == null ? total : 0;
+    _hitungKembalian();
   }
 
   void _hitungKembalian() {
     final bayar = int.tryParse(_bayarController.text.trim());
+    _kembalian = (bayar != null && _total > 0) ? bayar - _total : null;
+  }
+
+  void _resetTransaksi() {
     setState(() {
-      _kembalian = (bayar != null && _total > 0) ? bayar - _total : null;
+      _pakaiBillingPc = false;
+      _tipePc = TipePc.reguler;
+      _durasiController.text = '2';
+      for (final menu in _daftarMenu) {
+        _qtyMenu[menu.nama] = 0;
+      }
+      _bayarController.clear();
+      _total = 0;
+      _kembalian = null;
+      _errorDurasi = null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final totalBilling = _pakaiBillingPc
+        ? TipePc.hitungTotal(
+            tipe: _tipePc,
+            durasiJam: int.tryParse(_durasiController.text.trim()) ?? 0,
+          )
+        : 0;
+
+    final totalJajanan = _daftarMenu.fold<int>(
+      0,
+      (sum, m) => sum + (m.harga * (_qtyMenu[m.nama] ?? 0)),
+    );
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Kasir Warnet')),
+      appBar: AppBar(
+        title: const Text('Kasir Warnet'),
+        actions: [
+          IconButton(
+            tooltip: 'Reset Transaksi',
+            icon: const Icon(Icons.refresh),
+            onPressed: _resetTransaksi,
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
+          constraints: const BoxConstraints(maxWidth: 480),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Satu transaksi bisa berisi sewa PC dan/atau jajanan.',
-                    style: TextStyle(color: Colors.grey),
+                    'Pilih paket billing dan/atau jajanan dengan sekali tap.',
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
 
-                  // --- Sewa PC ---
+                  // ==================== 1. BILLING PC ====================
                   Card(
+                    elevation: 1.5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: _pakaiBillingPc
+                            ? Colors.blue.shade300
+                            : Colors.grey.shade200,
+                      ),
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           CheckboxListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: const Text(
-                              'Termasuk sewa PC',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            title: Row(
+                              children: [
+                                Icon(Icons.computer,
+                                    color: _pakaiBillingPc
+                                        ? Colors.blue
+                                        : Colors.grey.shade600),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Buka Billing PC',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
                             ),
-                            value: _pakaiSewaPc,
-                            onChanged: (val) =>
-                                setState(() => _pakaiSewaPc = val ?? false),
+                            subtitle: const Text(
+                              'Aktifkan jika pelanggan main/sewa PC',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            value: _pakaiBillingPc,
+                            onChanged: (val) {
+                              setState(() {
+                                _pakaiBillingPc = val ?? false;
+                                _hitungTotalOtomatis();
+                              });
+                            },
                           ),
-                          if (_pakaiSewaPc) ...[
-                            const SizedBox(height: 4),
+                          if (_pakaiBillingPc) ...[
+                            const Divider(),
+                            const SizedBox(height: 6),
                             DropdownButtonFormField<TipePc>(
                               initialValue: _tipePc,
                               decoration: const InputDecoration(
-                                labelText: 'Tipe PC',
+                                labelText: 'Tipe PC / Paket',
                                 border: OutlineInputBorder(),
                                 isDense: true,
                               ),
@@ -169,143 +230,240 @@ class _KasirScreenState extends State<KasirScreen> {
                                       ))
                                   .toList(),
                               onChanged: (val) {
-                                if (val != null) setState(() => _tipePc = val);
+                                if (val != null) {
+                                  setState(() {
+                                    _tipePc = val;
+                                    _hitungTotalOtomatis();
+                                  });
+                                }
                               },
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 10),
                             TextFormField(
                               controller: _durasiController,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                                labelText: 'Durasi (Jam)',
+                                labelText: 'Durasi Main (Jam)',
+                                hintText: 'Contoh: 2',
                                 border: const OutlineInputBorder(),
                                 isDense: true,
                                 errorText: _errorDurasi,
                               ),
+                              onChanged: (_) => setState(_hitungTotalOtomatis),
                             ),
-                            CheckboxListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: const Text(
-                                'Tambah Es Teh Manis (+ Rp 4.000)',
+                            if (totalBilling > 0 && _errorDurasi == null) ...[
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  'Subtotal Billing: Rp $totalBilling',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                ),
                               ),
-                              value: _tambahEsTeh,
-                              onChanged: (val) =>
-                                  setState(() => _tambahEsTeh = val ?? false),
-                            ),
+                            ],
                           ],
                         ],
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 16),
 
-                  // --- Jajanan/minuman ---
-                  const Text(
-                    'Jajanan / Minuman',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  // ==================== 2. MENU JAJANAN & MINUMAN ====================
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Menu Jajanan & Minuman',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Tap item untuk pesan',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
-                  for (final item in _items)
-                    Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    key: ValueKey('nama_${item.id}'),
-                                    controller: item.namaController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Nama barang (opsional)',
-                                      hintText: 'Misal: Mie Instan',
-                                      isDense: true,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  tooltip: 'Hapus item ini',
-                                  icon: const Icon(Icons.close_rounded, size: 20),
-                                  onPressed: () => _hapusItem(item.id),
-                                ),
-                              ],
+
+                  for (final menu in _daftarMenu) ...[
+                    Builder(
+                      builder: (context) {
+                        final qty = _qtyMenu[menu.nama] ?? 0;
+                        final isSelected = qty > 0;
+                        final isMinuman = menu.kategori == 'Minuman';
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          elevation: isSelected ? 2 : 0.8,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: isSelected
+                                  ? Colors.blue.shade400
+                                  : Colors.grey.shade200,
+                              width: isSelected ? 1.5 : 1,
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: TextFormField(
-                                    key: ValueKey('harga_${item.id}'),
-                                    controller: item.hargaController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Harga satuan',
-                                      prefixText: 'Rp ',
-                                      isDense: true,
+                          ),
+                          color: isSelected ? Colors.blue.shade50.withValues(alpha: 0.3) : Colors.white,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _increment(menu.nama),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              child: Row(
+                                children: [
+                                  // Icon Kategori
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: isMinuman
+                                          ? Colors.cyan.shade50
+                                          : Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                    validator: (v) {
-                                      if (v == null || v.trim().isEmpty) return null;
-                                      final n = int.tryParse(v.trim());
-                                      if (n == null) return 'Wajib angka';
-                                      if (n < 0) return 'Tidak boleh negatif';
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  flex: 2,
-                                  child: TextFormField(
-                                    key: ValueKey('qty_${item.id}'),
-                                    controller: item.qtyController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Qty',
-                                      isDense: true,
+                                    child: Icon(
+                                      menu.icon,
+                                      color: isMinuman
+                                          ? Colors.cyan.shade700
+                                          : Colors.orange.shade800,
+                                      size: 24,
                                     ),
-                                    validator: (v) {
-                                      if (v == null || v.trim().isEmpty) return null;
-                                      final n = int.tryParse(v.trim());
-                                      if (n == null) return 'Wajib angka';
-                                      if (n <= 0) return 'Min 1';
-                                      return null;
-                                    },
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 12),
+
+                                  // Nama & Harga
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          menu.nama,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Rp ${menu.harga}',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade700,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Counter [+] [-]
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                          size: 24,
+                                        ),
+                                        color: qty > 0
+                                            ? Colors.red.shade400
+                                            : Colors.grey.shade300,
+                                        onPressed: qty > 0
+                                            ? () => _decrement(menu.nama)
+                                            : null,
+                                      ),
+                                      Container(
+                                        constraints:
+                                            const BoxConstraints(minWidth: 26),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '$qty',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: qty > 0
+                                                ? Colors.blue.shade900
+                                                : Colors.grey.shade500,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.add_circle,
+                                          size: 24,
+                                        ),
+                                        color: Colors.green.shade600,
+                                        onPressed: () =>
+                                            _increment(menu.nama),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+
+                  if (totalJajanan > 0) ...[
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'Subtotal Jajanan: Rp $totalJajanan',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.orange.shade800,
                         ),
                       ),
                     ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: _items.length < _maxItems ? _tambahItem : null,
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(
-                        _items.length < _maxItems
-                            ? 'Tambah item'
-                            : 'Maksimal $_maxItems item',
-                      ),
-                    ),
-                  ),
+                  ],
+
                   const SizedBox(height: 12),
+
+                  // ==================== 3. TOMBOL HITUNG & TOTAL ====================
                   ElevatedButton(
-                    onPressed: _hitungTotal,
+                    onPressed: () {
+                      setState(_hitungTotalOtomatis);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    child: const Text('HITUNG TOTAL'),
+                    child: const Text(
+                      'HITUNG TOTAL',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  const SizedBox(height: 24),
+
+                  const SizedBox(height: 16),
+
+                  // Card Total & Pembayaran
                   Card(
                     elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -313,11 +471,17 @@ class _KasirScreenState extends State<KasirScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Total Belanja:', style: TextStyle(fontSize: 16)),
+                              const Text(
+                                'Total Transaksi:',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                               Text(
                                 'Rp $_total',
                                 style: const TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blue,
                                 ),
@@ -329,28 +493,58 @@ class _KasirScreenState extends State<KasirScreen> {
                             controller: _bayarController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              labelText: 'Uang Pembayaran (Rp)',
+                              labelText: 'Uang Pembayaran Pelanggan (Rp)',
+                              prefixText: 'Rp ',
                               border: OutlineInputBorder(),
+                              isDense: true,
                             ),
-                            onChanged: (_) => _hitungKembalian(),
+                            onChanged: (_) => setState(_hitungKembalian),
                           ),
                           if (_kembalian != null) ...[
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Kembalian:', style: TextStyle(fontSize: 16)),
-                                Text(
-                                  _kembalian! >= 0
-                                      ? 'Rp $_kembalian'
-                                      : 'Uang Kurang Rp ${-_kembalian!}',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: _kembalian! >= 0 ? Colors.green : Colors.red,
-                                  ),
+                            const SizedBox(height: 14),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: _kembalian! >= 0
+                                    ? Colors.green.shade50
+                                    : Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _kembalian! >= 0
+                                      ? Colors.green.shade300
+                                      : Colors.red.shade300,
                                 ),
-                              ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _kembalian! >= 0
+                                        ? 'Kembalian:'
+                                        : 'Status Pembayaran:',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _kembalian! >= 0
+                                          ? Colors.green.shade900
+                                          : Colors.red.shade900,
+                                    ),
+                                  ),
+                                  Text(
+                                    _kembalian! >= 0
+                                        ? 'Rp $_kembalian'
+                                        : 'Kurang Rp ${-_kembalian!}',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: _kembalian! >= 0
+                                          ? Colors.green.shade800
+                                          : Colors.red.shade800,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ],
