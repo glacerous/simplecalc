@@ -32,12 +32,14 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  sqflite: ^2.3.0
+  sqflite: ^2.4.4
   sqflite_common_ffi: ^2.3.0
-  path: ^1.9.0
-  shared_preferences: ^2.2.2
-  intl: ^0.19.0
+  path: ^1.9.1
+  shared_preferences: ^2.5.5
   sqflite_common_ffi_web: ^1.2.0
+  intl: ^0.20.3
+  hijri: ^3.0.1
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
@@ -60,20 +62,3 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
-  assets:
-    - assets/images/blue_sky_poster.png
-    - assets/fonts/
-    - assets/videos/
-
-  fonts:
-    - family: InstrumentSerif
-      fonts:
-        - asset: assets/fonts/InstrumentSerif-Regular.ttf
-        - asset: assets/fonts/InstrumentSerif-Italic.ttf
-          style: italic
-    - family: CormorantGaramond
-      fonts:
-        - asset: assets/fonts/CormorantGaramond-Regular.ttf
-        - asset: assets/fonts/CormorantGaramond-SemiBold.ttf
-          weight: 600

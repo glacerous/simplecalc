@@ -36,7 +36,7 @@ class BantuanScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('1. Halaman Utama', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Berisi 5 menu utama: Daftar Anggota, Komputasi Billing, CRUD Sewa PC, Konversi Umur & Hijriah, serta Konversi Weton & Saka Bali.'),
+                  Text('Berisi 5 menu utama: Daftar Anggota, Kasir Warnet (sewa PC + jajanan), Kelola Sesi (CRUD), Konversi Umur & Hijriah, serta Konversi Weton & Saka Bali.'),
                   SizedBox(height: 8),
                   Text('2. Stopwatch', style: TextStyle(fontWeight: FontWeight.bold)),
                   Text('Digunakan untuk menghitung durasi waktu secara presisi (Start, Pause, Reset).'),

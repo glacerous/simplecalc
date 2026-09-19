@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'daftar_anggota_screen.dart';
-import 'warnet_komputasi_screen.dart';
+import 'kasir_screen.dart';
 import 'warnet_crud_screen.dart';
 import 'konversi_umur_hijriah_screen.dart';
 import 'konversi_weton_saka_screen.dart';
@@ -81,9 +81,9 @@ class DashboardScreen extends StatelessWidget {
                 // 2. Komputasi Tema
                 _menuButton(
                   context: context,
-                  text: '2. Komputasi Tarif Warnet',
+                  text: '2. Kasir Warnet',
                   icon: Icons.calculate,
-                  targetScreen: const WarnetKomputasiScreen(),
+                  targetScreen: const KasirScreen(),
                 ),
 
                 // 3. CRUD Tema

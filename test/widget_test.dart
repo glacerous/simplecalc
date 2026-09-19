@@ -5,7 +5,6 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tugas2mobile/main.dart';
@@ -16,7 +15,7 @@ void main() {
     await tester.pumpWidget(const WarnetApp(isLogin: false));
 
     // Verify that login title and button are present
-    expect(find.text('SISTEM BILLING WARNET'), findsOneWidget);
+    expect(find.text('WARNET POJOK'), findsOneWidget);
     expect(find.text('LOGIN'), findsOneWidget);
   });
 }
