@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'helpers/session_manager.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,15 +31,7 @@ class WarnetApp extends StatelessWidget {
     return MaterialApp(
       title: 'Warnet Pojok',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          centerTitle: true,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
       home: isLogin ? const MainShellScreen() : const LoginScreen(),
     );
   }
