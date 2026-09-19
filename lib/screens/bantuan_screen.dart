@@ -39,7 +39,7 @@ class BantuanScreen extends StatelessWidget {
                   Text('Berisi 5 menu utama: Daftar Anggota, Kasir Warnet (sewa PC + jajanan), Kelola Sesi (CRUD), Konversi Umur & Hijriah, serta Konversi Weton & Saka Bali.'),
                   SizedBox(height: 8),
                   Text('2. Stopwatch', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Digunakan untuk menghitung durasi waktu secara presisi (Start, Pause, Reset).'),
+                  Text('Digunakan untuk menghitung durasi waktu secara presisi dengan fitur Start, Pause, Reset, dan Catat Putaran (Lap). Stopwatch tetap aktif berjalan meskipun Anda berpindah tab menu.'),
                   SizedBox(height: 8),
                   Text('3. Database & Session', style: TextStyle(fontWeight: FontWeight.bold)),
                   Text('Aplikasi menggunakan SQLite untuk menyimpan data sewa PC dan SharedPreferences untuk session login.'),
