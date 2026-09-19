@@ -1,6 +1,10 @@
 class DateConverterHelper {
   // 1. Hitung Umur Detail (Tahun, Bulan, Hari, Jam, Menit, Detik)
   static Map<String, int> hitungUmur(DateTime lahir, DateTime sekarang) {
+    if (lahir.isAfter(sekarang)) {
+      return {'tahun': 0, 'bulan': 0, 'hari': 0, 'jam': 0, 'menit': 0, 'detik': 0};
+    }
+
     int tahun = sekarang.year - lahir.year;
     int bulan = sekarang.month - lahir.month;
     int hari = sekarang.day - lahir.day;
@@ -36,7 +40,11 @@ class DateConverterHelper {
 
   static String konversiHijriah(DateTime date) {
     final jd = _gregorianKeJulianDay(date.year, date.month, date.day);
-    int daysSince = jd - 1948440; // Epok Hijriah (1 Muharram 1 H)
+    int daysSince = jd - 1948440; // Epok Hijriah (1 Muharram 1 H = 16 Juli 622 M)
+
+    if (daysSince < 0) {
+      return 'Sebelum Era Hijriah (1 H dimulai 16 Juli 622 M)';
+    }
 
     final cycle = daysSince ~/ 10631;
     int r = daysSince - cycle * 10631;
@@ -68,7 +76,7 @@ class DateConverterHelper {
     return '${sisaHari + 1} ${bulanHijriah[month - 1]} $hYear H';
   }
 
-  // 3. Weton Jawa (Hari + Pasaran + Neptu)
+  // 3. Weton Jawa (Hari + Pasaran + Neptu) via Julian Day (Akurat bebas batasan tahun)
   static Map<String, dynamic> konversiWeton(DateTime date) {
     const namaHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
     const neptuHari = {'Minggu': 5, 'Senin': 4, 'Selasa': 3, 'Rabu': 7, 'Kamis': 8, 'Jumat': 6, 'Sabtu': 9};
@@ -76,8 +84,8 @@ class DateConverterHelper {
     const neptuPasaran = {'Legi': 5, 'Pahing': 9, 'Pon': 7, 'Wage': 4, 'Kliwon': 8};
 
     final hari = namaHari[date.weekday - 1];
-    final diff = date.difference(DateTime.utc(1970, 1, 1)).inDays;
-    int pIndex = (diff + 3) % 5;
+    final jd = _gregorianKeJulianDay(date.year, date.month, date.day);
+    int pIndex = jd % 5;
     if (pIndex < 0) pIndex += 5;
     final pasaran = namaPasaran[pIndex];
 
@@ -102,6 +110,10 @@ class DateConverterHelper {
   ];
 
   static String konversiSakaBali(DateTime date) {
+    if (date.year < 79) {
+      return 'Sebelum Era Saka Bali (1 Saka dimulai 78 M)';
+    }
+
     final nyepiTahunIni = _tanggalNyepi[date.year] != null
         ? DateTime(date.year, _tanggalNyepi[date.year]!.month, _tanggalNyepi[date.year]!.day)
         : DateTime(date.year, 3, 21);

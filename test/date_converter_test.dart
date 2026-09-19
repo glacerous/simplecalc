@@ -34,5 +34,28 @@ void main() {
       expect(weton['weton'], 'Jumat Legi');
       expect(weton['neptu'], 11); // Jumat(6) + Legi(5) = 11
     });
+
+    test('Gracefully handles pre-Hijriah and pre-Saka dates without crashing', () {
+      final preHijri = DateTime(500, 1, 1);
+      expect(DateConverterHelper.konversiHijriah(preHijri), contains('Sebelum Era Hijriah'));
+
+      final preSaka = DateTime(50, 1, 1);
+      expect(DateConverterHelper.konversiSakaBali(preSaka), contains('Sebelum Era Saka'));
+    });
+
+    test('Handles future birthdate safely without negative numbers', () {
+      final futureDate = DateTime(3000, 1, 1);
+      final umur = DateConverterHelper.hitungUmur(futureDate, DateTime(2026, 9, 19));
+      expect(umur['tahun'], 0);
+      expect(umur['bulan'], 0);
+      expect(umur['hari'], 0);
+    });
+
+    test('Weton works for year 1 up to year 9999', () {
+      final y1 = DateTime(1, 1, 1);
+      final y9999 = DateTime(9999, 12, 31);
+      expect(DateConverterHelper.konversiWeton(y1)['weton'], isNotEmpty);
+      expect(DateConverterHelper.konversiWeton(y9999)['weton'], isNotEmpty);
+    });
   });
 }

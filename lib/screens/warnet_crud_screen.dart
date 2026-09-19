@@ -327,8 +327,8 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
                         final pick = await showDatePicker(
                           context: context,
                           initialDate: _tanggal,
-                          firstDate: DateTime(1000),
-                          lastDate: DateTime(2500),
+                          firstDate: DateTime(1),
+                          lastDate: DateTime(9999, 12, 31),
                         );
                         if (pick != null) setState(() => _tanggal = pick);
                       },

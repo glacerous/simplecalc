@@ -31,8 +31,8 @@ class _KonversiWetonSakaScreenState extends State<KonversiWetonSakaScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _tanggal,
-      firstDate: DateTime(1000),
-      lastDate: DateTime(2500),
+      firstDate: DateTime(1),
+      lastDate: DateTime(9999, 12, 31),
     );
     if (picked != null) {
       setState(() {

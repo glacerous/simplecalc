@@ -27,8 +27,8 @@ class _KonversiUmurHijriahScreenState extends State<KonversiUmurHijriahScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _tanggalLahir,
-      firstDate: DateTime(1000),
-      lastDate: DateTime(2500),
+      firstDate: DateTime(1),
+      lastDate: DateTime(9999, 12, 31),
     );
     if (picked != null) {
       setState(() {
@@ -42,8 +42,8 @@ class _KonversiUmurHijriahScreenState extends State<KonversiUmurHijriahScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _tanggalMasehi,
-      firstDate: DateTime(1000),
-      lastDate: DateTime(2500),
+      firstDate: DateTime(1),
+      lastDate: DateTime(9999, 12, 31),
     );
     if (picked != null) {
       setState(() {
@@ -171,18 +171,40 @@ class _KonversiUmurHijriahScreenState extends State<KonversiUmurHijriahScreen> {
                         children: [
                           const Text('Hasil Perhitungan Usia Presisi', style: TextStyle(fontSize: 12, color: AppTheme.fog, fontWeight: FontWeight.w500)),
                           const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _statChip('${_hasilUmur!['tahun']}', 'Tahun'),
-                              _statChip('${_hasilUmur!['bulan']}', 'Bulan'),
-                              _statChip('${_hasilUmur!['hari']}', 'Hari'),
-                              _statChip('${_hasilUmur!['jam']}', 'Jam'),
-                              _statChip('${_hasilUmur!['menit']}', 'Menit'),
-                              _statChip('${_hasilUmur!['detik']}', 'Detik'),
-                            ],
-                          ),
+                          if (_tanggalLahir.isAfter(DateTime.now()))
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.amber.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, size: 16, color: Colors.amber.shade900),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Tanggal lahir berada di masa depan (belum lahir).',
+                                      style: TextStyle(fontSize: 12, color: Colors.amber.shade900, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _statChip('${_hasilUmur!['tahun']}', 'Tahun'),
+                                _statChip('${_hasilUmur!['bulan']}', 'Bulan'),
+                                _statChip('${_hasilUmur!['hari']}', 'Hari'),
+                                _statChip('${_hasilUmur!['jam']}', 'Jam'),
+                                _statChip('${_hasilUmur!['menit']}', 'Menit'),
+                                _statChip('${_hasilUmur!['detik']}', 'Detik'),
+                              ],
+                            ),
                         ],
                       ),
                     ),
