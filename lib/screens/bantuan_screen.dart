@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../helpers/session_manager.dart';
+import '../theme/app_theme.dart';
 import 'login_screen.dart';
 
 class BantuanScreen extends StatelessWidget {
@@ -15,46 +16,83 @@ class BantuanScreen extends StatelessWidget {
     );
   }
 
+  static const List<Map<String, String>> _guides = [
+    {
+      'num': '1',
+      'title': 'Halaman Utama',
+      'desc': 'Berisi 5 modul: Daftar Anggota, Kasir Warnet (billing PC + jajanan siap-tap), Kelola Sesi (CRUD SQLite), Konversi Umur & Hijriah, serta Konversi Weton & Saka Bali.',
+    },
+    {
+      'num': '2',
+      'title': 'Stopwatch Presisi',
+      'desc': 'Menghitung waktu dengan resolusi centisecond, kontrol Start/Pause/Reset, dan pencatatan waktu putaran (Lap) yang tetap berjalan aktif di background saat berpindah tab.',
+    },
+    {
+      'num': '3',
+      'title': 'Penyimpanan & Sesi',
+      'desc': 'Data transaksi sesi tersimpan di SQLite lokal dan status login pengguna dikelola via SharedPreferences.',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bantuan & Pengaturan'),
-      ),
+      appBar: AppBar(title: const Text('Bantuan & Pengaturan')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         children: [
-          const Text(
-            'Petunjuk Penggunaan Aplikasi',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('1. Halaman Utama', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Berisi 5 menu utama: Daftar Anggota, Kasir Warnet (billing PC + jajanan), Kelola Sesi (CRUD), Konversi Umur & Hijriah, serta Konversi Weton & Saka Bali.'),
-                  SizedBox(height: 8),
-                  Text('2. Stopwatch', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Digunakan untuk menghitung durasi waktu secara presisi dengan fitur Start, Pause, Reset, dan Catat Putaran (Lap). Stopwatch tetap aktif berjalan meskipun Anda berpindah tab menu.'),
-                  SizedBox(height: 8),
-                  Text('3. Database & Session', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Aplikasi menggunakan SQLite untuk menyimpan data billing PC dan SharedPreferences untuk session login.'),
-                ],
-              ),
+          const Text('Petunjuk Penggunaan', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.obsidian, letterSpacing: -0.4)),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.snow,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppTheme.cloud),
+            ),
+            child: Column(
+              children: _guides.map((g) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 26,
+                        height: 26,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppTheme.cobalt.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(g['num']!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.cobalt)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(g['title']!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.obsidian)),
+                            const SizedBox(height: 3),
+                            Text(g['desc']!, style: const TextStyle(fontSize: 13, color: AppTheme.fog, height: 1.4)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            icon: const Icon(Icons.logout),
-            label: const Text('LOGOUT'),
+            icon: const Icon(Icons.logout_rounded, size: 18),
+            label: const Text('LOGOUT DARI SISTEM'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: const Color(0xFFE11D48),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             onPressed: () => _logout(context),
           ),

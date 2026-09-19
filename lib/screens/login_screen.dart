@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../helpers/database_helper.dart';
 import '../helpers/session_manager.dart';
+import '../theme/app_theme.dart';
 import 'main_shell_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,40 +24,29 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    final username = _userController.text.trim();
-    final password = _passController.text.trim();
+    final u = _userController.text.trim();
+    final p = _passController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Username dan Password wajib diisi')),
-      );
+    if (u.isEmpty || p.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Username dan Password wajib diisi')));
       return;
     }
 
     setState(() => _isLoading = true);
-
     try {
-      final success = await DatabaseHelper.instance.login(username, password);
-
+      final success = await DatabaseHelper.instance.login(u, p);
       if (!mounted) return;
 
       if (success) {
-        await SessionManager.saveLogin(username);
+        await SessionManager.saveLogin(u);
         if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainShellScreen()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShellScreen()));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Username atau password salah!')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Username atau password salah!')));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -65,67 +55,51 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login Warnet Pojok'),
-      ),
+      backgroundColor: AppTheme.paper,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Icon(Icons.computer, size: 80, color: Colors.blue),
-                const SizedBox(height: 16),
-                const Text(
-                  'WARNET POJOK',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _userController,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+            child: Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: AppTheme.snow,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppTheme.cloud),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(color: AppTheme.cobalt, borderRadius: BorderRadius.circular(16)),
+                      child: const Icon(Icons.computer_rounded, size: 32, color: Colors.white),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                  const SizedBox(height: 18),
+                  const Text('WARNET POJOK', textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: AppTheme.obsidian)),
+                  const SizedBox(height: 4),
+                  const Text('Masuk untuk mengakses sistem kasir & operasional', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.fog, fontSize: 13)),
+                  const SizedBox(height: 28),
+                  TextField(controller: _userController, decoration: const InputDecoration(labelText: 'Username', prefixIcon: Icon(Icons.person_outline, size: 20))),
+                  const SizedBox(height: 14),
+                  TextField(controller: _passController, obscureText: true, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline, size: 20))),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _login,
+                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.obsidian, foregroundColor: Colors.white),
+                    child: _isLoading
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text('LOGIN', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                   ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text('LOGIN', style: TextStyle(fontSize: 16)),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Default Login: admin / admin123',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  const Text('Default: admin / admin123', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.fog, fontSize: 12)),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'dashboard_screen.dart';
 import 'stopwatch_screen.dart';
 import 'bantuan_screen.dart';
@@ -26,24 +27,37 @@ class _MainShellScreenState extends State<MainShellScreen> {
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: Colors.blue,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Halaman Utama',
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: AppTheme.cloud, width: 1),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.timer),
-            label: 'Stopwatch',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.help_outline),
-            label: 'Bantuan',
-          ),
-        ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          selectedItemColor: AppTheme.cobalt,
+          unselectedItemColor: AppTheme.fog,
+          backgroundColor: AppTheme.snow,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Halaman Utama',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.timer_outlined),
+              activeIcon: Icon(Icons.timer),
+              label: 'Stopwatch',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.help_outline),
+              activeIcon: Icon(Icons.help),
+              label: 'Bantuan',
+            ),
+          ],
+        ),
       ),
     );
   }
