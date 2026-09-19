@@ -158,7 +158,8 @@ class _WarnetCrudScreenState extends State<WarnetCrudScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              '${tipe.label} • ${item['tanggal']} • Durasi: ${item['durasi']} Jam • '
+              '${tipe.label} • ${item['tanggal']} ${item['jam_mulai']} • '
+              'Durasi: ${item['durasi']} Jam • '
               'Total: Rp ${item['total']} • Status: ${item['status']}',
             ),
             isThreeLine: false,
@@ -201,8 +202,9 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
   late final TextEditingController _durasiController;
   late TipePc _tipePc;
   late DateTime _tanggal;
+  late TimeOfDay _jamMulai;
   bool _isSaving = false;
-  String? _errorBentrok;
+  String? _errorValidasi;
 
   bool get _isEdit => widget.item != null;
 
@@ -221,6 +223,14 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
     _tanggal = item?['tanggal'] != null
         ? DateTime.parse(item!['tanggal'])
         : DateTime.now();
+    _jamMulai = item?['jam_mulai'] != null
+        ? _timeOfDayDariString(item!['jam_mulai'])
+        : const TimeOfDay(hour: 10, minute: 0);
+  }
+
+  static TimeOfDay _timeOfDayDariString(String hhmm) {
+    final parts = hhmm.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
   @override
@@ -237,6 +247,23 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
       '${_tanggal.day.toString().padLeft(2, '0')}/'
       '${_tanggal.month.toString().padLeft(2, '0')}/${_tanggal.year}';
 
+  int get _jamMulaiMenit => _jamMulai.hour * 60 + _jamMulai.minute;
+
+  String get _jamMulaiIso =>
+      '${_jamMulai.hour.toString().padLeft(2, '0')}:'
+      '${_jamMulai.minute.toString().padLeft(2, '0')}';
+
+  String get _jamMulaiTampil => _jamMulaiIso;
+
+  String _jamSelesaiTampil(int durasiJam) {
+    final selesaiMenit = _jamMulaiMenit + durasiJam * 60;
+    final jam = (selesaiMenit ~/ 60) % 24;
+    final menit = selesaiMenit % 60;
+    final lewatHari = selesaiMenit >= 1440;
+    final jamStr = '${jam.toString().padLeft(2, '0')}:${menit.toString().padLeft(2, '0')}';
+    return lewatHari ? '$jamStr (besok)' : jamStr;
+  }
+
   Future<void> _pilihTanggal() async {
     final hasil = await showDatePicker(
       context: context,
@@ -247,12 +274,35 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
     if (hasil != null) setState(() => _tanggal = hasil);
   }
 
+  Future<void> _pilihJamMulai() async {
+    final hasil = await showTimePicker(
+      context: context,
+      initialTime: _jamMulai,
+    );
+    if (hasil != null) setState(() => _jamMulai = hasil);
+  }
+
   Future<void> _simpan() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final durasi = int.parse(_durasiController.text.trim());
+
+    // Sesi wajib selesai di hari kalender yang sama (lihat catatan di
+    // DatabaseHelper.adaBentrokJadwal soal kenapa nyebrang tengah malam
+    // sengaja tidak didukung).
+    if (_jamMulaiMenit + durasi * 60 > 24 * 60) {
+      setState(() {
+        _errorValidasi =
+            'Sesi jam $_jamMulaiTampil selama $durasi jam akan lewat tengah '
+            'malam (${_jamSelesaiTampil(durasi)}). Pilih jam mulai lebih pagi '
+            'atau durasi lebih pendek — sesi harus selesai di hari yang sama.';
+      });
+      return;
+    }
+
     setState(() {
       _isSaving = true;
-      _errorBentrok = null;
+      _errorValidasi = null;
     });
 
     final nomorPc = _pcController.text.trim();
@@ -262,25 +312,29 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
         nomorPc: nomorPc,
         tipePc: _tipePc.name,
         tanggal: _tanggalIso,
+        jamMulaiMenit: _jamMulaiMenit,
+        durasiJam: durasi,
         excludeId: _isEdit ? widget.item!['id'] as int : null,
       );
       if (bentrok) {
         setState(() {
           _isSaving = false;
-          _errorBentrok =
+          _errorValidasi =
               'PC "$nomorPc" tipe ${_tipePc.label} sudah dipakai sesi lain '
-              'pada tanggal $_tanggalTampil. Pilih PC lain atau ganti tanggal.';
+              'yang jamnya bertabrakan pada tanggal $_tanggalTampil '
+              '($_jamMulaiTampil-${_jamSelesaiTampil(durasi)}). '
+              'Pilih PC lain, ganti jam, atau ganti tanggal.';
         });
         return;
       }
 
-      final durasi = int.parse(_durasiController.text.trim());
       final total = TipePc.hitungTotal(tipe: _tipePc, durasiJam: durasi);
       final row = {
         'nama': _namaController.text.trim(),
         'nomor_pc': nomorPc,
         'tipe_pc': _tipePc.name,
         'tanggal': _tanggalIso,
+        'jam_mulai': _jamMulaiIso,
         'durasi': durasi,
         'total': total,
         'status': _isEdit ? widget.item!['status'] : 'Aktif',
@@ -341,10 +395,42 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
                 },
               ),
               const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: _pilihTanggal,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Tanggal',
+                          suffixIcon: Icon(Icons.calendar_today, size: 18),
+                        ),
+                        child: Text(_tanggalTampil),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: InkWell(
+                      onTap: _pilihJamMulai,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Jam Mulai',
+                          suffixIcon: Icon(Icons.access_time, size: 18),
+                        ),
+                        child: Text(_jamMulaiTampil),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _durasiController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Durasi (Jam)'),
+                onChanged: (_) => setState(() {}), // refresh preview jam selesai
                 validator: (v) {
                   final n = int.tryParse((v ?? '').trim());
                   if (n == null) return 'Harus berupa angka bulat';
@@ -353,18 +439,18 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
                   return null;
                 },
               ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: _pilihTanggal,
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Tanggal Sewa',
-                    suffixIcon: Icon(Icons.calendar_today, size: 18),
+              Builder(builder: (context) {
+                final durasi = int.tryParse(_durasiController.text.trim());
+                if (durasi == null || durasi <= 0) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Sesi: $_jamMulaiTampil – ${_jamSelesaiTampil(durasi)}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
-                  child: Text(_tanggalTampil),
-                ),
-              ),
-              if (_errorBentrok != null) ...[
+                );
+              }),
+              if (_errorValidasi != null) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -380,7 +466,7 @@ class _SesiFormDialogState extends State<_SesiFormDialog> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          _errorBentrok!,
+                          _errorValidasi!,
                           style: TextStyle(color: Colors.red.shade700, fontSize: 13),
                         ),
                       ),

@@ -8,7 +8,7 @@ import 'tarif_warnet.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
 
   DatabaseHelper._init();
 
@@ -46,6 +46,7 @@ class DatabaseHelper {
         nomor_pc TEXT NOT NULL,
         tipe_pc TEXT NOT NULL DEFAULT 'reguler',
         tanggal TEXT NOT NULL,
+        jam_mulai TEXT NOT NULL DEFAULT '00:00',
         durasi INTEGER NOT NULL,
         total INTEGER NOT NULL,
         status TEXT NOT NULL
@@ -64,6 +65,7 @@ class DatabaseHelper {
       'nomor_pc': 'PC-01',
       'tipe_pc': TipePc.reguler.name,
       'tanggal': hariIni,
+      'jam_mulai': '10:00',
       'durasi': 3,
       'total': TipePc.hitungTotal(tipe: TipePc.reguler, durasiJam: 3),
       'status': 'Aktif',
@@ -73,6 +75,7 @@ class DatabaseHelper {
       'nomor_pc': 'PC-02',
       'tipe_pc': TipePc.vip.name,
       'tanggal': hariIni,
+      'jam_mulai': '14:00',
       'durasi': 2,
       'total': TipePc.hitungTotal(tipe: TipePc.vip, durasiJam: 2),
       'status': 'Selesai',
@@ -94,6 +97,14 @@ class DatabaseHelper {
       final hariIni = DateTime.now().toIso8601String().substring(0, 10);
       await db.execute(
         "ALTER TABLE rentals ADD COLUMN tanggal TEXT NOT NULL DEFAULT '$hariIni'",
+      );
+    }
+    if (oldVersion < 4) {
+      // Baris lama dianggap mulai jam 00:00 — nggak presisi buat data
+      // historis, tapi baris baru ke depannya sudah tercatat jam mulainya
+      // beneran, jadi cek bentrok jadi akurat per jam mulai saat ini.
+      await db.execute(
+        "ALTER TABLE rentals ADD COLUMN jam_mulai TEXT NOT NULL DEFAULT '00:00'",
       );
     }
   }
@@ -130,18 +141,21 @@ class DatabaseHelper {
     return db.delete('rentals', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Cek apakah PC yang sama (nomor + tipe) sudah dipakai di tanggal yang
-  /// sama oleh sesi lain. `excludeId` dipakai waktu edit, supaya baris yang
-  /// sedang diedit tidak bentrok dengan dirinya sendiri.
+  /// Cek apakah PC yang sama (nomor + tipe) sudah dipakai di RENTANG JAM
+  /// yang bertabrakan pada tanggal yang sama. `excludeId` dipakai waktu
+  /// edit, supaya baris yang sedang diedit tidak bentrok dengan dirinya
+  /// sendiri.
   ///
-  /// Catatan skala: aplikasi ini nyimpen sesi per hari (tanpa jam mulai),
-  /// jadi satu PC = satu sesi per hari, siapapun statusnya. Kalau nanti
-  /// butuh granularitas per jam, kolom `tanggal` perlu diganti jadi
-  /// datetime rentang (mulai+selesai) dan query ini jadi cek overlap waktu.
+  /// Batasan yang disengaja: sesi wajib mulai & selesai di hari kalender
+  /// yang sama (tidak boleh nyebrang tengah malam) — makanya cek overlap
+  /// cukup dibandingkan dengan baris-baris di tanggal yang sama saja,
+  /// tidak perlu lihat tanggal sebelum/sesudahnya.
   Future<bool> adaBentrokJadwal({
     required String nomorPc,
     required String tipePc,
     required String tanggal,
+    required int jamMulaiMenit,
+    required int durasiJam,
     int? excludeId,
   }) async {
     final db = await instance.database;
@@ -151,7 +165,27 @@ class DatabaseHelper {
       where.write(' AND id != ?');
       args.add(excludeId);
     }
-    final hasil = await db.query('rentals', where: where.toString(), whereArgs: args);
-    return hasil.isNotEmpty;
+    final kandidat = await db.query('rentals', where: where.toString(), whereArgs: args);
+
+    final mulaiBaru = jamMulaiMenit;
+    final selesaiBaru = jamMulaiMenit + durasiJam * 60;
+
+    for (final row in kandidat) {
+      final jamMulaiLama = _menitDariString(row['jam_mulai'] as String);
+      final durasiLama = row['durasi'] as int;
+      final mulaiLama = jamMulaiLama;
+      final selesaiLama = jamMulaiLama + durasiLama * 60;
+
+      // Dua rentang waktu dianggap bertabrakan kalau salah satu mulai
+      // sebelum yang lain selesai, dua-duanya (overlap interval klasik).
+      final overlap = mulaiBaru < selesaiLama && mulaiLama < selesaiBaru;
+      if (overlap) return true;
+    }
+    return false;
+  }
+
+  static int _menitDariString(String hhmm) {
+    final parts = hhmm.split(':');
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
   }
 }
